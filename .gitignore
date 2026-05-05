@@ -1,0 +1,83 @@
+# -----------------------
+# Node / Dependencies
+# -----------------------
+node_modules/
+**/node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# -----------------------
+# Build Outputs
+# -----------------------
+dist/
+build/
+.out/
+.next/
+**/dist/
+**/build/
+
+# Vite cache
+node_modules/.vite
+.vite
+
+# -----------------------
+# TypeScript
+# -----------------------
+*.tsbuildinfo
+
+# -----------------------
+# Environment files
+# -----------------------
+.env
+.env.*
+!.env.example
+
+# -----------------------
+# OS junk
+# -----------------------
+.DS_Store
+Thumbs.db
+
+# -----------------------
+# Editor / IDE
+# -----------------------
+.vscode/
+.idea/
+*.code-workspace
+
+# -----------------------
+# App Data 
+# -----------------------
+apps/api/data/
+data/
+
+# -----------------------
+# Runtime / Temp files
+# -----------------------
+tmp/
+temp/
+*.tmp
+
+# -----------------------
+# Electron / Packaging (future)
+# -----------------------
+release/
+dist-electron/
+*.exe
+*.msi
+*.zip
+
+# -----------------------
+# Coverage / Testing
+# -----------------------
+coverage/
+.nyc_output/
+
+# -----------------------
+# Misc
+# -----------------------
+*.log

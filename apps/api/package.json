@@ -1,0 +1,25 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "tsx --watch src/index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "tsx": "^4.21.0"
+  },
+  "type": "module",
+  "dependencies": {
+    "@hono/node-server": "^2.0.1",
+    "better-sqlite3": "^12.9.0",
+    "drizzle-orm": "^0.45.2",
+    "hono": "^4.12.17",
+    "zod": "^4.4.3"
+  }
+}

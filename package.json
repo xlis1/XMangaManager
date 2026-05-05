@@ -1,0 +1,21 @@
+{
+  "name": "xmangamanagerv2",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "concurrently -n API,WEB -c blue,magenta \"npm -w apps/api run dev\" \"npm -w apps/web run dev\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "typescript": "^6.0.3"
+  }
+}
