@@ -35,9 +35,11 @@ export async function getChapterPages(chapterId: string) {
     return existingPages;
   }
 
+  /*
   logger.warn("Chapter pages not stored locally; scraping source pages", {
     chapterId,
   });
+  */
 
   return scrapeAndStoreChapterPages(chapterId);
 }

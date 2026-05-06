@@ -82,26 +82,26 @@ p {
 .topbar {
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 30;
   height: 64px;
   border-bottom: 1px solid #222838;
   background: rgba(11, 13, 16, 0.86);
   backdrop-filter: blur(12px);
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  justify-content: space-between;
+  gap: 1rem;
   padding: 0 1.25rem;
 }
 
 .brand {
   font-weight: 800;
   letter-spacing: 0.02em;
+  justify-self: end;
 }
 
 .nav {
-  display: flex;
-  gap: 1rem;
-  color: #cbd5e1;
+  display: none;
 }
 
 .nav a:hover {
@@ -801,4 +801,52 @@ select {
   .grid {
     grid-template-columns: repeat(var(--library-columns-mobile), minmax(0, 1fr));
   }
+}
+
+.appMenuBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.appSidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: min(340px, 88vw);
+  z-index: 50;
+  transform: translate3d(-105%, 0, 0);
+  transition: transform 180ms ease;
+  background: #10151f;
+  border-right: 1px solid #252b36;
+  padding: 1rem;
+  overflow-y: auto;
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  will-change: transform;
+}
+
+.appSidebar.open {
+  transform: translate3d(0, 0, 0);
+}
+
+.appSidebarNav {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.appSidebarNav a {
+  border: 1px solid #252b36;
+  background: rgba(21, 25, 34, 0.82);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  color: #e5e7eb;
+  font-weight: 700;
+}
+
+.appSidebarNav a:hover {
+  background: #1c2330;
 }
