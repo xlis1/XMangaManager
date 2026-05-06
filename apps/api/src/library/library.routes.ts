@@ -18,6 +18,8 @@ import {
   repairAllChapters,
   updateMangaDisplayTitle,
   verifyAllChapters,
+  enqueueCheckAllTrackedManga,
+  enqueueDownloadMissingChapters,
 } from "./library.service.js";
 
 export const libraryRoutes = new Hono();
@@ -68,7 +70,7 @@ libraryRoutes.post("/import", async (c) => {
 });
 
 libraryRoutes.post("/check-all", async (c) => {
-  return c.json(await checkAllTrackedManga());
+  return c.json(enqueueCheckAllTrackedManga());
 });
 
 libraryRoutes.get("/updates", async (c) => {
@@ -84,7 +86,7 @@ libraryRoutes.post("/:mangaId/refresh", async (c) => {
 });
 
 libraryRoutes.post("/:mangaId/download-missing", async (c) => {
-  return c.json(await downloadMissingChapters(c.req.param("mangaId")));
+  return c.json(enqueueDownloadMissingChapters(c.req.param("mangaId")));
 });
 
 libraryRoutes.post("/:mangaId/follow", async (c) => {

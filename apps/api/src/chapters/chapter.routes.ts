@@ -8,6 +8,7 @@ import {
   repairChapter,
   updateChapterReadProgress,
   verifyChapter,
+  enqueueChapterDownload,
 } from "./chapter.service.js";
 
 export const chapterRoutes = new Hono();
@@ -17,7 +18,7 @@ chapterRoutes.get("/:chapterId/pages", async (c) => {
 });
 
 chapterRoutes.post("/:chapterId/download", async (c) => {
-  return c.json(await downloadChapter(c.req.param("chapterId")));
+  return c.json(enqueueChapterDownload(c.req.param("chapterId")));
 });
 
 chapterRoutes.post("/:chapterId/progress", async (c) => {
@@ -48,9 +49,17 @@ chapterRoutes.get("/:chapterId/verify", async (c) => {
 });
 
 chapterRoutes.post("/:chapterId/repair", async (c) => {
-  return c.json(await repairChapter(c.req.param("chapterId")));
+  return c.json(
+    enqueueChapterDownload(c.req.param("chapterId"), {
+      repairOnly: true,
+    }),
+  );
 });
 
 chapterRoutes.post("/:chapterId/redownload", async (c) => {
-  return c.json(await redownloadChapter(c.req.param("chapterId")));
+  return c.json(
+    enqueueChapterDownload(c.req.param("chapterId"), {
+      force: true,
+    }),
+  );
 });

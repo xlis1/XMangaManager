@@ -6,6 +6,7 @@ import { ReaderPage } from "./pages/ReaderPage";
 import { SearchPage } from "./pages/SearchPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { UpdatesPage } from "./pages/UpdatesPage";
+import { QueueStatus } from "./components/QueueStatus";
 
 export default function App() {
   const location = useLocation();
@@ -64,6 +65,7 @@ export default function App() {
               </Link>
             </nav>
           </aside>
+          <QueueStatus />
         </>
       )}
 

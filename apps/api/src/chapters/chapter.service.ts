@@ -13,6 +13,7 @@ import {
   isUsableDownloadedFile,
 } from "../storage/media-storage.service.js";
 import { logger } from "../utils/logger.js";
+import { enqueueSourceJob } from "../jobs/source-queue.service.js";
 
 function now() {
   return new Date().toISOString();
@@ -102,7 +103,60 @@ export async function scrapeAndStoreChapterPages(chapterId: string) {
     .sort((a, b) => a.pageIndex - b.pageIndex);
 }
 
-export async function downloadChapter(chapterId: string, options?: { force?: boolean; repairOnly?: boolean; },) {
+export function enqueueChapterDownload(
+  chapterId: string,
+  options?: {
+    force?: boolean;
+    repairOnly?: boolean;
+  },
+) {
+  const chapter = db
+    .select()
+    .from(chapters)
+    .where(eq(chapters.id, chapterId))
+    .get();
+
+  if (!chapter) {
+    throw new Error("Chapter not found");
+  }
+
+  const localManga = db
+    .select()
+    .from(manga)
+    .where(eq(manga.id, chapter.mangaId))
+    .get();
+
+  if (!localManga) {
+    throw new Error("Manga not found");
+  }
+
+  return enqueueSourceJob({
+    sourceId: localManga.sourceId,
+    name: `${options?.force ? "Redownload" : "Download"} ${localManga.displayTitle || localManga.title
+      } chapter ${chapter.chapterNumber ?? "?"}`,
+    task: async ({ setMessage, setProgress }) => {
+      return downloadChapter(chapterId, {
+        ...options,
+        progressPrefix: `${localManga.displayTitle || localManga.title} ch. ${chapter.chapterNumber ?? "?"
+          }`,
+        onProgress: (current, total, message) => {
+          setProgress(current, total);
+          setMessage(message);
+        },
+      });
+    },
+  });
+}
+
+export async function downloadChapter(
+  chapterId: string,
+  options?: {
+    force?: boolean;
+    repairOnly?: boolean;
+    progressPrefix?: string;
+    onProgress?: (current: number, total: number, message: string) => void;
+  },
+) {
   const config = await getConfig();
   const chapter = db
     .select()
@@ -139,10 +193,15 @@ export async function downloadChapter(chapterId: string, options?: { force?: boo
     .run();
 
   const chapterPages = await getChapterPages(chapterId);
+  options?.onProgress?.(
+    0,
+    chapterPages.length,
+    `${options.progressPrefix ?? "Chapter"}: starting download`,
+  );
 
   let failed = 0;
 
-  for (const page of chapterPages) {
+  for (const [pageLoopIndex, page] of chapterPages.entries()) {
     const filePath = getPageFilePath({
       sourceId: localManga.sourceId,
       sourceMangaId: localManga.sourceMangaId,
@@ -211,7 +270,12 @@ export async function downloadChapter(chapterId: string, options?: { force?: boo
         .where(eq(pages.id, page.id))
         .run();
     }
-
+    options?.onProgress?.(
+      pageLoopIndex + 1,
+      chapterPages.length,
+      `${options.progressPrefix ?? "Chapter"}: page ${pageLoopIndex + 1}/${chapterPages.length
+      }`,
+    );
     await sleep(config.chapterDownloadDelayMs);
   }
 

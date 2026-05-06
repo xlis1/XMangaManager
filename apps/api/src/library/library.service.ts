@@ -7,6 +7,7 @@ import { pages } from "../db/schema.js";
 import { getConfig } from "../config/config.service.js";
 import { runRateLimited } from "../utils/rate-limit.js";
 import { logger } from "../utils/logger.js";
+import { enqueueSourceJob } from "../jobs/source-queue.service.js";
 import {
   deleteMangaMedia,
   downloadFileToPath,
@@ -309,12 +310,12 @@ export async function getManga(mangaId: string) {
     .all();
 
   return {
-  ...localManga,
-  title: localManga.displayTitle || localManga.title,
-  originalTitle: localManga.title,
-  coverUrl: localManga.localCoverUrl || localManga.coverUrl,
-  chapters: localChapters,
-};
+    ...localManga,
+    title: localManga.displayTitle || localManga.title,
+    originalTitle: localManga.title,
+    coverUrl: localManga.localCoverUrl || localManga.coverUrl,
+    chapters: localChapters,
+  };
 }
 
 export async function setMangaTracking(params: {
@@ -559,4 +560,77 @@ export async function checkAllTrackedManga(setMessage?: (message: string) => voi
     checkedCount: trackedManga.length,
     results,
   };
+}
+
+export function enqueueDownloadMissingChapters(mangaId: string) {
+  const localManga = db.select().from(manga).where(eq(manga.id, mangaId)).get();
+
+  if (!localManga) {
+    throw new Error("Manga not found");
+  }
+
+  return enqueueSourceJob({
+    sourceId: localManga.sourceId,
+    name: `Download missing chapters: ${localManga.displayTitle || localManga.title}`,
+    task: async ({ setMessage, setProgress }) => {
+      const localChapters = db
+        .select()
+        .from(chapters)
+        .where(eq(chapters.mangaId, mangaId))
+        .all();
+
+      const missing = localChapters.filter(
+        (chapter) => chapter.downloadStatus !== "downloaded",
+      );
+
+      setProgress(0, missing.length);
+
+      for (const [index, chapter] of missing.entries()) {
+        setMessage(`Downloading ${localManga.displayTitle || localManga.title} chapter ${chapter.chapterNumber ?? "?"}`,
+        );
+
+        await downloadChapter(chapter.id, {progressPrefix: `${localManga.displayTitle || localManga.title} ch. ${chapter.chapterNumber ?? "?"}`,});
+
+        setProgress(index + 1, missing.length);
+      }
+
+      return {
+        mangaId,
+        downloadedCount: missing.length,
+      };
+    },
+  });
+}
+
+export function enqueueCheckAllTrackedManga() {
+  return enqueueSourceJob({
+    sourceId: "global",
+    name: "Check all tracked manga",
+    task: async ({ setMessage, setProgress }) => {
+      const trackedManga = db
+        .select()
+        .from(manga)
+        .where(eq(manga.tracked, true))
+        .all();
+
+      setProgress(0, trackedManga.length);
+
+      for (const [index, item] of trackedManga.entries()) {
+        setMessage(`Checking ${item.displayTitle || item.title}...`);
+
+        await refreshManga(item.id);
+
+        if (item.autoDownload) {
+          setMessage(`Queueing downloads for ${item.displayTitle || item.title}...`);
+          enqueueDownloadMissingChapters(item.id);
+        }
+
+        setProgress(index + 1, trackedManga.length);
+      }
+
+      return {
+        checkedCount: trackedManga.length,
+      };
+    },
+  });
 }

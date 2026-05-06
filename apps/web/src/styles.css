@@ -850,3 +850,151 @@ select {
 .appSidebarNav a:hover {
   background: #1c2330;
 }
+
+.queueStatus {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 60;
+  width: min(420px, calc(100vw - 2rem));
+  border: 1px solid #313847;
+  background: rgba(17, 23, 34, 0.96);
+  backdrop-filter: blur(12px);
+  border-radius: 14px;
+  padding: 0.9rem;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+}
+
+.queueStatus {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 60;
+  width: min(460px, calc(100vw - 2rem));
+  border: 1px solid #313847;
+  background: rgba(17, 23, 34, 0.96);
+  backdrop-filter: blur(12px);
+  border-radius: 14px;
+  padding: 0.9rem;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+}
+
+.queueStatus p {
+  margin: 0.25rem 0 0;
+}
+
+.queueStatusHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.queueToggle {
+  min-height: 2rem;
+  padding: 0.35rem 0.65rem;
+}
+
+.queueCurrentJob {
+  margin-top: 0.75rem;
+  border-top: 1px solid #252b36;
+  padding-top: 0.75rem;
+}
+
+.queueJobName {
+  font-weight: 800;
+  color: #f9fafb;
+}
+
+.queueJobProgress {
+  margin-top: 0.65rem;
+}
+
+.queueJobProgressHeader {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  margin-bottom: 0.35rem;
+}
+
+.progressBar {
+  height: 8px;
+  background: #252b36;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progressBar > div {
+  height: 100%;
+  background: #60a5fa;
+  transition: width 150ms ease;
+}
+
+.queueMeta {
+  font-size: 0.8rem;
+}
+
+.queueDetails {
+  margin-top: 0.8rem;
+  border-top: 1px solid #252b36;
+  padding-top: 0.8rem;
+  display: grid;
+  gap: 0.9rem;
+  max-height: 55vh;
+  overflow-y: auto;
+}
+
+.queueDetails h3 {
+  font-size: 0.9rem;
+  margin-bottom: 0.45rem;
+}
+
+.queueMiniList {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.queueMiniJob {
+  display: grid;
+  grid-template-columns: 2rem 1fr;
+  gap: 0.55rem;
+  align-items: start;
+  border: 1px solid #252b36;
+  background: rgba(11, 13, 16, 0.45);
+  border-radius: 10px;
+  padding: 0.55rem;
+}
+
+.queueMiniJob > span {
+  display: grid;
+  place-items: center;
+  min-height: 1.8rem;
+  border-radius: 8px;
+  background: #1c2330;
+  color: #cbd5e1;
+  font-weight: 800;
+  font-size: 0.8rem;
+}
+
+.queueMiniJob p {
+  font-size: 0.85rem;
+}
+
+.queueMiniJob.failed {
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
+.queueMiniJob.failed > span {
+  background: rgba(127, 29, 29, 0.55);
+  color: #fecaca;
+}
+
+@media (max-width: 760px) {
+  .queueStatus {
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: 0.5rem;
+    width: auto;
+  }
+}

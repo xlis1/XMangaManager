@@ -117,6 +117,31 @@ export type JobState = {
   lastResult: unknown | null;
 };
 
+export type SourceQueueJob = {
+  id: string;
+  sourceId: string;
+  name: string;
+  status: "queued" | "running" | "completed" | "failed";
+  message: string;
+  progressCurrent: number;
+  progressTotal: number;
+  createdAt: string;
+  startedAt: string | null;
+  finishedAt: string | null;
+  error: string | null;
+};
+
+export type SourceQueueStatus = {
+  queues: {
+    sourceId: string;
+    running: boolean;
+    activeJob: SourceQueueJob | null;
+    queuedCount: number;
+    queuedJobs: SourceQueueJob[];
+  }[];
+  recentJobs: SourceQueueJob[];
+};
+
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, options);
 
@@ -260,6 +285,9 @@ export const api = {
     request(`/api/library/${mangaId}/cache-cover`, {
       method: "POST",
     }),
+
+  getSourceQueues: () =>
+    request<SourceQueueStatus>("/api/jobs/source-queues"),
 
   updateDisplayTitle: (mangaId: string, displayTitle: string | null) =>
     request<MangaDetails>(`/api/library/${mangaId}/display-title`, {
