@@ -1,6 +1,7 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { serveStatic } from "@hono/node-server/serve-static";
+import os from "node:os";
 import { initDb } from "./db/client.js";
 import { configRoutes } from "./config/config.routes.js";
 import { libraryRoutes } from "./library/library.routes.js";
@@ -15,6 +16,8 @@ await runStartupRepair();
 void startUpdateScheduler();
 
 const app = new Hono();
+const PORT = 3000;
+
 
 app.get("/media/*", serveStatic({ root: "./data" }));
 
@@ -52,6 +55,21 @@ app.get("/api/sources/:sourceId/chapters/:chapterId/pages", async (c) => {
   return c.json(await source.getChapterPages(c.req.param("chapterId")));
 });
 
+function getLocalIPs() {
+  const nets = os.networkInterfaces();
+  const results: string[] = [];
+
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name] ?? []) {
+      if (net.family === "IPv4" && !net.internal) {
+        results.push(net.address);
+      }
+    }
+  }
+
+  return results;
+}
+
 app.route("/api/jobs", jobRoutes);
 app.route("/api/config", configRoutes);
 app.route("/api/library", libraryRoutes);
@@ -59,7 +77,14 @@ app.route("/api/chapters", chapterRoutes);
 
 serve({
   fetch: app.fetch,
-  port: 3000,
+  port: PORT,
 });
 
-console.log("API running on http://localhost:3000");
+
+console.log(`API running on http://localhost:${PORT}`);
+
+const ips = getLocalIPs();
+
+for (const ip of ips) {
+  console.log(`LAN access: http://${ip}:5173`);
+}

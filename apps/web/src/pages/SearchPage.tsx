@@ -10,6 +10,7 @@ export function SearchPage() {
   const [loading, setLoading] = useState(false);
   const [importingId, setImportingId] = useState("");
   const [error, setError] = useState("");
+  const [sourceId, setSourceId] = useState("mangadex");
 
   async function search() {
     if (!query.trim()) return;
@@ -17,7 +18,7 @@ export function SearchPage() {
     try {
       setLoading(true);
       setError("");
-      setResults(await api.searchManga(query));
+      setResults(await api.searchManga(sourceId, query));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Search failed");
     } finally {
@@ -48,7 +49,10 @@ export function SearchPage() {
           <p className="muted">Search MangaDex and import manga locally.</p>
         </div>
       </div>
-
+      <select value={sourceId} onChange={(event) => setSourceId(event.target.value)}>
+        <option value="mangadex">MangaDex</option>
+        <option value="mangahere">MangaHere</option>
+      </select>
       <div className="searchBar">
         <input
           value={query}

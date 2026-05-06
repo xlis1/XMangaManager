@@ -155,9 +155,9 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
 export const api = {
   getLibrary: () => request<Manga[]>("/api/library"),
 
-  searchManga: (query: string) =>
+  searchManga: (sourceId: string, query: string) =>
     request<SearchResult[]>(
-      `/api/sources/mangadex/search?q=${encodeURIComponent(query)}`,
+      `/api/sources/${sourceId}/search?q=${encodeURIComponent(query)}`,
     ),
 
   checkAll: () =>
@@ -319,6 +319,11 @@ export const api = {
     }),
 
   getUpdates: () => request<UpdateFeedItem[]>("/api/library/updates"),
+
+  deleteChapterLocalFiles: (chapterId: string) =>
+    request<Chapter>(`/api/chapters/${chapterId}/delete-local`, {
+      method: "POST",
+    }),
 
   updateMangaReaderSettings: (
     mangaId: string,

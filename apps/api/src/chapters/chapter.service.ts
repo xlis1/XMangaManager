@@ -14,6 +14,8 @@ import {
 } from "../storage/media-storage.service.js";
 import { logger } from "../utils/logger.js";
 import { enqueueSourceJob } from "../jobs/source-queue.service.js";
+import { downloadFirstWorkingUrlToPath } from "../storage/media-storage.service.js";
+import { getMangaHereImageFallbacks } from "../sources/mangahere.js";
 
 function now() {
   return new Date().toISOString();
@@ -43,6 +45,50 @@ export async function getChapterPages(chapterId: string) {
   */
 
   return scrapeAndStoreChapterPages(chapterId);
+}
+
+export async function deleteChapterLocalFiles(chapterId: string) {
+  const chapter = db
+    .select()
+    .from(chapters)
+    .where(eq(chapters.id, chapterId))
+    .get();
+
+  if (!chapter) {
+    throw new Error("Chapter not found");
+  }
+
+  const chapterPages = db
+    .select()
+    .from(pages)
+    .where(eq(pages.chapterId, chapterId))
+    .all();
+
+  for (const page of chapterPages) {
+    deleteFileIfExists(page.localPath);
+
+    db.update(pages)
+      .set({
+        localPath: null,
+        localUrl: null,
+        downloadStatus: "not_downloaded",
+        downloadError: null,
+        downloadedAt: null,
+      })
+      .where(eq(pages.id, page.id))
+      .run();
+  }
+
+  db.update(chapters)
+    .set({
+      downloadStatus: "not_downloaded",
+      downloadedAt: null,
+      updatedAt: new Date().toISOString(),
+    })
+    .where(eq(chapters.id, chapterId))
+    .run();
+
+  return db.select().from(chapters).where(eq(chapters.id, chapterId)).get();
 }
 
 export async function scrapeAndStoreChapterPages(chapterId: string) {
@@ -241,7 +287,28 @@ export async function downloadChapter(
         .where(eq(pages.id, page.id))
         .run();
 
-      await downloadFileToPath(page.remoteUrl, filePath);
+      const imageReferer =
+        localManga.sourceId === "mangahere"
+          ? `https://newm.mangahere.cc/${chapter.sourceChapterId}/1.html`
+          : undefined;
+
+      const urls =
+        localManga.sourceId === "mangahere"
+          ? [page.remoteUrl, ...getMangaHereImageFallbacks(page.remoteUrl)]
+          : [page.remoteUrl];
+
+      const workingUrl = await downloadFirstWorkingUrlToPath(urls, filePath, {
+        referer: imageReferer,
+      });
+
+      if (workingUrl !== page.remoteUrl) {
+        db.update(pages)
+          .set({
+            remoteUrl: workingUrl,
+          })
+          .where(eq(pages.id, page.id))
+          .run();
+      }
 
       db.update(pages)
         .set({

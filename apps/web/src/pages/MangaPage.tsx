@@ -290,6 +290,32 @@ export function MangaPage() {
     });
   }
 
+  async function deleteChapterLocalFiles(chapterId: string) {
+    const confirmed = window.confirm(
+      "Delete this chapter's local files and mark it as not downloaded?",
+    );
+
+    if (!confirmed) return;
+
+    const updated = await api.deleteChapterLocalFiles(chapterId);
+
+    setManga((current) => {
+      if (!current) return current;
+
+      return {
+        ...current,
+        chapters: current.chapters.map((chapter) =>
+          chapter.id === chapterId
+            ? {
+              ...chapter,
+              downloadStatus: updated.downloadStatus,
+            }
+            : chapter,
+        ),
+      };
+    });
+  }
+
   async function markUnread(chapterId: string) {
     const updated = await api.markUnread(chapterId);
 
@@ -675,6 +701,29 @@ export function MangaPage() {
                       }}
                     >
                       Mark Read
+                    </button>
+                  )}
+
+                  {chapter.downloadStatus !== "not_downloaded" && (
+                    <button
+                      onClick={() => {
+                        setOpenMenuId(null);
+                        void deleteChapterLocalFiles(chapter.id);
+                      }}
+                    >
+                      Delete Local Files
+                    </button>
+                  )}
+
+                  {(chapter.downloadStatus === "failed" || chapter.downloadStatus === "partial") && (
+                    <button
+                      onClick={() => {
+                        setOpenMenuId(null);
+                        void repairChapter(chapter.id);
+                      }}
+                      disabled={busy === `repair-${chapter.id}`}
+                    >
+                      {busy === `repair-${chapter.id}` ? "Repairing..." : "Repair Chapter"}
                     </button>
                   )}
                 </div>

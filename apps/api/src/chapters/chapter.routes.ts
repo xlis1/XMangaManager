@@ -9,6 +9,7 @@ import {
   updateChapterReadProgress,
   verifyChapter,
   enqueueChapterDownload,
+  deleteChapterLocalFiles
 } from "./chapter.service.js";
 
 export const chapterRoutes = new Hono();
@@ -19,6 +20,10 @@ chapterRoutes.get("/:chapterId/pages", async (c) => {
 
 chapterRoutes.post("/:chapterId/download", async (c) => {
   return c.json(enqueueChapterDownload(c.req.param("chapterId")));
+});
+
+chapterRoutes.post("/:chapterId/delete-local", async (c) => {
+  return c.json(await deleteChapterLocalFiles(c.req.param("chapterId")));
 });
 
 chapterRoutes.post("/:chapterId/progress", async (c) => {

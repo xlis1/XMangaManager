@@ -26,6 +26,13 @@ export function getChapterMediaDir(params: {
   );
 }
 
+function encodePath(value: string) {
+  return value
+    .split("/")
+    .map((part) => encodeURIComponent(part))
+    .join("/");
+}
+
 export function isUsableDownloadedFile(filePath: string | null | undefined) {
   if (!filePath) return false;
   if (!existsSync(filePath)) return false;
@@ -67,7 +74,7 @@ export function getCoverLocalUrl(params: {
 }) {
   const ext = getExtensionFromUrl(params.remoteUrl);
 
-  return `/media/${encodeURIComponent(params.sourceId)}/${encodeURIComponent(
+  return `/media/${encodePath(params.sourceId)}/${encodePath(
     params.sourceMangaId,
   )}/cover${ext}`;
 }
@@ -98,15 +105,50 @@ export function getPageLocalUrl(params: {
   const pageNumber = String(params.pageIndex + 1).padStart(4, "0");
   const ext = getExtensionFromUrl(params.remoteUrl);
 
-  return `/media/${encodeURIComponent(params.sourceId)}/${encodeURIComponent(
+  return `/media/${encodePath(params.sourceId)}/${encodePath(
     params.sourceMangaId,
-  )}/chapters/${encodeURIComponent(params.sourceChapterId)}/${pageNumber}${ext}`;
+  )}/chapters/${encodePath(params.sourceChapterId)}/${pageNumber}${ext}`;
 }
 
-export async function downloadFileToPath(url: string, filePath: string) {
+export async function downloadFirstWorkingUrlToPath(
+  urls: string[],
+  filePath: string,
+  options?: {
+    referer?: string;
+  },
+) {
+  const errors: string[] = [];
+
+  for (const url of urls) {
+    try {
+      await downloadFileToPath(url, filePath, options);
+      return url;
+    } catch (error) {
+      errors.push(
+        `${url}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  throw new Error(`All download attempts failed: ${errors.join(" | ")}`);
+}
+
+export async function downloadFileToPath(
+  url: string,
+  filePath: string,
+  options?: {
+    referer?: string;
+  },
+) {
   const res = await fetch(url, {
     headers: {
-      "User-Agent": "XMangaManager/0.1 personal archival reader",
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+        "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      Accept: "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+      "Accept-Language": "en-US,en;q=0.9",
+      Referer: options?.referer ?? "https://newm.mangahere.cc/",
+      Origin: "https://newm.mangahere.cc",
     },
   });
 
