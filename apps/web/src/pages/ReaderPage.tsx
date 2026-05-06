@@ -103,6 +103,18 @@ export function ReaderPage() {
   const previousChapter = chapters[currentChapterIndex - 1];
   const nextChapter = chapters[currentChapterIndex + 1];
 
+  function isNearBottom() {
+    const scrollTop = window.scrollY;
+    const viewportHeight = window.innerHeight;
+    const fullHeight = document.documentElement.scrollHeight;
+
+    if (fullHeight <= viewportHeight) return true;
+
+    const scrollPercent = (scrollTop + viewportHeight) / fullHeight;
+
+    return scrollPercent >= 0.99;
+  }
+
   function getCurrentPageIndex() {
     const viewportMiddle = window.scrollY + window.innerHeight / 2;
     const imageNodes = Array.from(
@@ -156,7 +168,7 @@ export function ReaderPage() {
 
     const current = getCurrentPageIndex();
 
-    if (current >= sortedPages.length - 1) {
+    if (current >= sortedPages.length - 1 || isNearBottom()) {
       await api.markRead(chapterId);
 
       if (nextChapter) {
@@ -169,6 +181,28 @@ export function ReaderPage() {
     }
 
     scrollToPage(current + 1);
+  }
+
+  async function goPreviousChapter() {
+    if (!mangaId) return;
+
+    if (previousChapter) {
+      navigate(`/manga/${mangaId}/read/${previousChapter.id}`);
+    } else {
+      navigate(`/manga/${mangaId}`);
+    }
+  }
+
+  async function goNextChapter() {
+    if (!mangaId || !chapterId) return;
+
+    await api.markRead(chapterId);
+
+    if (nextChapter) {
+      navigate(`/manga/${mangaId}/read/${nextChapter.id}`);
+    } else {
+      navigate(`/manga/${mangaId}`);
+    }
   }
 
   async function handleZoneClick(side: "left" | "right") {
@@ -231,8 +265,8 @@ export function ReaderPage() {
           Manga
         </Link>
 
-        <button onClick={() => void goPreviousPage()}>Prev</button>
-        <button onClick={() => void goNextPage()}>Next</button>
+        <button onClick={() => void goPreviousChapter()}>Prev Chapter</button>
+        <button onClick={() => void goNextChapter()}>Next Chapter</button>
 
         <span className="muted">
           {sortedPages.length} pages

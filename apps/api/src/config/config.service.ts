@@ -10,6 +10,8 @@ export type AppConfig = {
   preferredLanguages: string[];
   readerDirection: "ltr" | "rtl" | "vertical";
   pageFit: "width" | "height" | "original";
+  libraryColumnsMobile: number;
+  libraryColumnsDesktop: number;
 
   updateIntervalMinutes: number;
   autoCheckOnStartup: boolean;
@@ -25,6 +27,8 @@ export const defaultConfig: AppConfig = {
   preferredLanguages: ["en"],
   readerDirection: "rtl",
   pageFit: "width",
+  libraryColumnsMobile: 3,
+  libraryColumnsDesktop: 6,
 
   updateIntervalMinutes: 360,
   autoCheckOnStartup: false,

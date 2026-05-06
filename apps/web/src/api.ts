@@ -89,6 +89,8 @@ export type AppConfig = {
   autoCheckOnStartup: boolean;
   requestDelayMs: number;
   chapterDownloadDelayMs: number;
+  libraryColumnsMobile: number;
+  libraryColumnsDesktop: number;
 };
 
 export type ChapterVerification = {
@@ -253,40 +255,40 @@ export const api = {
     request("/api/jobs/check-all", {
       method: "POST",
     }),
-  
-cacheCover: (mangaId: string) =>
-  request(`/api/library/${mangaId}/cache-cover`, {
-    method: "POST",
-  }),
 
-updateDisplayTitle: (mangaId: string, displayTitle: string | null) =>
-  request<MangaDetails>(`/api/library/${mangaId}/display-title`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ displayTitle }),
-  }),
+  cacheCover: (mangaId: string) =>
+    request(`/api/library/${mangaId}/cache-cover`, {
+      method: "POST",
+    }),
 
-verifyAllChapters: (mangaId: string) =>
-  request(`/api/library/${mangaId}/verify-all`, {
-    method: "POST",
-  }),
+  updateDisplayTitle: (mangaId: string, displayTitle: string | null) =>
+    request<MangaDetails>(`/api/library/${mangaId}/display-title`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ displayTitle }),
+    }),
 
-repairAllChapters: (mangaId: string) =>
-  request(`/api/library/${mangaId}/repair-all`, {
-    method: "POST",
-  }),
+  verifyAllChapters: (mangaId: string) =>
+    request(`/api/library/${mangaId}/verify-all`, {
+      method: "POST",
+    }),
 
-markAllChaptersRead: (mangaId: string) =>
-  request<MangaDetails>(`/api/library/${mangaId}/mark-all-read`, {
-    method: "POST",
-  }),
+  repairAllChapters: (mangaId: string) =>
+    request(`/api/library/${mangaId}/repair-all`, {
+      method: "POST",
+    }),
 
-markAllChaptersUnread: (mangaId: string) =>
-  request<MangaDetails>(`/api/library/${mangaId}/mark-all-unread`, {
-    method: "POST",
-  }),
+  markAllChaptersRead: (mangaId: string) =>
+    request<MangaDetails>(`/api/library/${mangaId}/mark-all-read`, {
+      method: "POST",
+    }),
+
+  markAllChaptersUnread: (mangaId: string) =>
+    request<MangaDetails>(`/api/library/${mangaId}/mark-all-unread`, {
+      method: "POST",
+    }),
 
   getUpdates: () => request<UpdateFeedItem[]>("/api/library/updates"),
 

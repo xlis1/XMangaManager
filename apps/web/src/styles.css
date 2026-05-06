@@ -792,3 +792,13 @@ select {
 .mangaMenu button:hover {
   background: #1c2330;
 }
+
+.grid {
+  grid-template-columns: repeat(var(--library-columns-desktop), minmax(0, 1fr));
+}
+
+@media (max-width: 760px) {
+  .grid {
+    grid-template-columns: repeat(var(--library-columns-mobile), minmax(0, 1fr));
+  }
+}

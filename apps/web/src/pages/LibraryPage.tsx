@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { api, type Manga } from "../api";
+import { api, type AppConfig, type Manga } from "../api";
 
 type SortMode =
   | "titleAsc"
@@ -19,11 +19,19 @@ export function LibraryPage() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [sortMode, setSortMode] = useState<SortMode>("titleAsc");
+  const [config, setConfig] = useState<AppConfig | null>(null);
 
   async function load() {
     try {
       setLoading(true);
-      setLibrary(await api.getLibrary());
+
+      const [libraryResult, configResult] = await Promise.all([
+        api.getLibrary(),
+        api.getConfig(),
+      ]);
+
+      setLibrary(libraryResult);
+      setConfig(configResult);
       setError("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load library");
@@ -139,7 +147,15 @@ export function LibraryPage() {
           <p className="muted">Try a different search or import something.</p>
         </div>
       ) : (
-        <div className="grid">
+        <div
+          className="grid"
+          style={
+            {
+              "--library-columns-mobile": config?.libraryColumnsMobile ?? 3,
+              "--library-columns-desktop": config?.libraryColumnsDesktop ?? 6,
+            } as React.CSSProperties
+          }
+        >
           {filteredLibrary.map((manga) => (
             <Link to={`/manga/${manga.id}`} className="mangaCard" key={manga.id}>
               <div className="coverWrap">

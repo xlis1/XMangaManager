@@ -148,6 +148,40 @@ export function SettingsPage() {
         </section>
 
         <section className="settingsCard">
+          <h2>Library Layout</h2>
+
+          <label>
+            Mobile columns
+            <input
+              type="number"
+              min={2}
+              max={5}
+              value={config.libraryColumnsMobile}
+              onChange={(event) =>
+                void save({
+                  libraryColumnsMobile: Number(event.target.value),
+                })
+              }
+            />
+          </label>
+
+          <label>
+            Desktop columns
+            <input
+              type="number"
+              min={4}
+              max={10}
+              value={config.libraryColumnsDesktop}
+              onChange={(event) =>
+                void save({
+                  libraryColumnsDesktop: Number(event.target.value),
+                })
+              }
+            />
+          </label>
+        </section>
+
+        <section className="settingsCard">
           <h2>Job Status</h2>
 
           <p>
