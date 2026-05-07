@@ -110,6 +110,36 @@ export function getPageLocalUrl(params: {
   )}/chapters/${encodePath(params.sourceChapterId)}/${pageNumber}${ext}`;
 }
 
+export async function downloadFileToPathWithReferer(
+  url: string,
+  filePath: string,
+  options?: {
+    referer?: string;
+  },
+) {
+  const headers: Record<string, string> = {
+    "User-Agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+      "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    Accept: "image/*,*/*;q=0.8",
+  };
+
+  if (options?.referer) {
+    headers.Referer = options.referer;
+  }
+
+  const res = await fetch(url, { headers });
+
+  if (!res.ok) {
+    throw new Error(`Download failed: ${res.status} ${res.statusText}`);
+  }
+
+  const arrayBuffer = await res.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+
+  writeFileSync(filePath, buffer);
+}
+
 export async function downloadFirstWorkingUrlToPath(
   urls: string[],
   filePath: string,
@@ -121,7 +151,7 @@ export async function downloadFirstWorkingUrlToPath(
 
   for (const url of urls) {
     try {
-      await downloadFileToPath(url, filePath, options);
+      await downloadFileToPathWithReferer(url, filePath, options);
       return url;
     } catch (error) {
       errors.push(
@@ -133,24 +163,8 @@ export async function downloadFirstWorkingUrlToPath(
   throw new Error(`All download attempts failed: ${errors.join(" | ")}`);
 }
 
-export async function downloadFileToPath(
-  url: string,
-  filePath: string,
-  options?: {
-    referer?: string;
-  },
-) {
-  const res = await fetch(url, {
-    headers: {
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-        "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-      Accept: "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
-      "Accept-Language": "en-US,en;q=0.9",
-      Referer: options?.referer ?? "https://newm.mangahere.cc/",
-      Origin: "https://newm.mangahere.cc",
-    },
-  });
+export async function downloadFileToPath(url: string, filePath: string) {
+  const res = await fetch(url);
 
   if (!res.ok) {
     throw new Error(`Download failed: ${res.status} ${res.statusText}`);

@@ -91,6 +91,81 @@ export async function deleteChapterLocalFiles(chapterId: string) {
   return db.select().from(chapters).where(eq(chapters.id, chapterId)).get();
 }
 
+export async function refreshChapterPages(chapterId: string) {
+  const chapter = db
+    .select()
+    .from(chapters)
+    .where(eq(chapters.id, chapterId))
+    .get();
+
+  if (!chapter) {
+    throw new Error("Chapter not found");
+  }
+
+  const localManga = db
+    .select()
+    .from(manga)
+    .where(eq(manga.id, chapter.mangaId))
+    .get();
+
+  if (!localManga) {
+    throw new Error("Manga not found");
+  }
+
+  const source = getSource(localManga.sourceId);
+  const remotePages = await source.getChapterPages(chapter.sourceChapterId);
+  //console.log("[refreshChapterPages] refreshed page count:", remotePages.length);
+  //console.log("[refreshChapterPages] first fresh url:", remotePages[0]?.url);
+
+  const existingPages = db
+    .select()
+    .from(pages)
+    .where(eq(pages.chapterId, chapterId))
+    .all();
+
+  const existingByIndex = new Map(
+    existingPages.map((page) => [page.pageIndex, page]),
+  );
+
+  const timestamp = now();
+
+  for (const remotePage of remotePages) {
+    const existing = existingByIndex.get(remotePage.index);
+
+    if (existing) {
+      db.update(pages)
+        .set({
+          remoteUrl: remotePage.url,
+          downloadError: null,
+        })
+        .where(eq(pages.id, existing.id))
+        .run();
+    } else {
+      db.insert(pages)
+        .values({
+          id: randomUUID(),
+          chapterId,
+          pageIndex: remotePage.index,
+          remoteUrl: remotePage.url,
+          localPath: null,
+          localUrl: null,
+          downloadStatus: "not_downloaded",
+          downloadError: null,
+          downloadedAt: null,
+          createdAt: timestamp,
+        })
+        .run();
+    }
+  }
+
+  return db
+    .select()
+    .from(pages)
+    .where(eq(pages.chapterId, chapterId))
+    .all()
+    .sort((a, b) => a.pageIndex - b.pageIndex);
+}
+
 export async function scrapeAndStoreChapterPages(chapterId: string) {
   const chapter = db
     .select()
@@ -238,12 +313,18 @@ export async function downloadChapter(
     .where(eq(chapters.id, chapterId))
     .run();
 
-  const chapterPages = await getChapterPages(chapterId);
+  const chapterPages =
+    localManga.sourceId === "mangadex"
+      ? await refreshChapterPages(chapterId)
+      : await getChapterPages(chapterId);
+
   options?.onProgress?.(
     0,
     chapterPages.length,
     `${options.progressPrefix ?? "Chapter"}: starting download`,
   );
+  //console.log("[downloadChapter] source:", localManga.sourceId);
+  //console.log("[downloadChapter] first page url:", chapterPages[0]?.remoteUrl);
 
   let failed = 0;
 
@@ -287,27 +368,26 @@ export async function downloadChapter(
         .where(eq(pages.id, page.id))
         .run();
 
-      const imageReferer =
-        localManga.sourceId === "mangahere"
-          ? `https://newm.mangahere.cc/${chapter.sourceChapterId}/1.html`
-          : undefined;
+      if (localManga.sourceId === "mangahere") {
+        const imageReferer = `https://newm.mangahere.cc/${chapter.sourceChapterId}/1.html`;
 
-      const urls =
-        localManga.sourceId === "mangahere"
-          ? [page.remoteUrl, ...getMangaHereImageFallbacks(page.remoteUrl)]
-          : [page.remoteUrl];
+        const urls = [
+          page.remoteUrl,
+          ...getMangaHereImageFallbacks(page.remoteUrl),
+        ];
 
-      const workingUrl = await downloadFirstWorkingUrlToPath(urls, filePath, {
-        referer: imageReferer,
-      });
+        const workingUrl = await downloadFirstWorkingUrlToPath(urls, filePath, {
+          referer: imageReferer,
+        });
 
-      if (workingUrl !== page.remoteUrl) {
-        db.update(pages)
-          .set({
-            remoteUrl: workingUrl,
-          })
-          .where(eq(pages.id, page.id))
-          .run();
+        if (workingUrl !== page.remoteUrl) {
+          db.update(pages)
+            .set({ remoteUrl: workingUrl })
+            .where(eq(pages.id, page.id))
+            .run();
+        }
+      } else {
+        await downloadFileToPath(page.remoteUrl, filePath);
       }
 
       db.update(pages)

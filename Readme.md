@@ -4,7 +4,7 @@ Local-first manga manager and reader with automatic updates and offline support.
 
 ## Features
 
-- Track manga from sources, currently MangaDex.
+- Track manga from sources, currently MangaDex and MangaHere.
 - Automatically check for new chapters.
 - Download and store chapters locally.
 - Read manga locally over LAN.

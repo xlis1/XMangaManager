@@ -93,18 +93,23 @@ export const mangadexAdapter: SourceAdapter = {
   },
 
   async getChapterPages(sourceChapterId) {
-    const res = await fetch(`${API}/at-home/server/${sourceChapterId}`);
-    if (!res.ok) throw new Error(`MangaDex page fetch failed: ${res.status}`);
+    const res = await fetch(
+      `https://api.mangadex.org/at-home/server/${sourceChapterId}`,
+    );
+
+    if (!res.ok) {
+      throw new Error(`MangaDex AtHome failed: ${res.status}`);
+    }
 
     const json = await res.json();
 
     const baseUrl = json.baseUrl;
     const hash = json.chapter.hash;
-    const pages = json.chapter.data;
+    const data: string[] = json.chapter.data ?? [];
 
-    return pages.map((file: string, index: number) => ({
+    return data.map((filename, index) => ({
       index,
-      url: `${baseUrl}/data/${hash}/${file}`,
+      url: `${baseUrl}/data/${hash}/${filename}`,
     }));
   },
 };
